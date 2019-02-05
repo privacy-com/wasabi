@@ -179,13 +179,13 @@ start_wasabi() {
 
 #   fixme: try to reuse the start_container() method instead of 'docker run...' directly; currently a problem with quotes in ${wenv} being passed into container.
   if [[ -z ${MONGO_URI} || -z ${MONGO_DB} ]] ; then
-    docker run --net=${docker_network} --name ${project}-main -p 8080:8080 -p 8090:8090 -p 8180:8180 \
+    docker run --restart unless-stopped --net=${docker_network} --name ${project}-main -p 8080:8080 -p 8090:8090 -p 8180:8180 \
       -e "${wenv}" -d ${project}-main || \
-      usage "docker run --net=${docker_network} --name ${project}-main -p 8080:8080 -p 8090:8090 -p 8180:8180 -e \"${wenv}\" -d ${project}-main" 1
+      usage "docker run --restart unless-stopped --net=${docker_network} --name ${project}-main -p 8080:8080 -p 8090:8090 -p 8180:8180 -e \"${wenv}\" -d ${project}-main" 1
   else
-    docker run --net=${docker_network} --name ${project}-main -p 8080:8080 -p 8090:8090 -p 8180:8180 \
+    docker run --restart unless-stopped --net=${docker_network} --name ${project}-main -p 8080:8080 -p 8090:8090 -p 8180:8180 \
       -e "${wenv}" -e "MONGO_URI=${MONGO_URI}" -e "MONGO_DB=${MONGO_DB}" -d ${project}-main || \
-      usage "docker run --net=${docker_network} --name ${project}-main -p 8080:8080 -p 8090:8090 -p 8180:8180 -e \"${wenv}\" -e MONGO_URI=${MONGO_URI} -e MONGO_DB=${MONGO_DB} -d ${project}-main" 1
+      usage "docker run --restart unless-stopped --net=${docker_network} --name ${project}-main -p 8080:8080 -p 8090:8090 -p 8180:8180 -e \"${wenv}\" -e MONGO_URI=${MONGO_URI} -e MONGO_DB=${MONGO_DB} -d ${project}-main" 1
   fi
 
   echo -ne "${green}chill'ax ${reset}"
@@ -195,7 +195,7 @@ start_wasabi() {
 
 start_cassandra() {
   start_docker
-  start_container ${project}-cassandra ${cassandra} "--privileged=true -p 9042:9042 -p 9160:9160 -v /var/lib/cassandra:/var/lib/cassandra"
+  start_container ${project}-cassandra ${cassandra} "--restart unless-stopped --privileged=true -p 9042:9042 -p 9160:9160 -v /var/lib/cassandra:/var/lib/cassandra"
 
   [ "${verify}" = true ] && console_cassandra
 
@@ -241,7 +241,7 @@ start_mysql() {
   pwd=mypass
 
   start_docker
-  start_container ${project}-mysql ${mysql} "-p 3306:3306 -e MYSQL_ROOT_PASSWORD=${pwd} -v /var/lib/mysql:/var/lib/mysql"
+  start_container ${project}-mysql ${mysql} "--restart unless-stopped -p 3306:3306 -e MYSQL_ROOT_PASSWORD=${pwd} -v /var/lib/mysql:/var/lib/mysql"
 
   wmip=$(docker inspect --format "{{ .NetworkSettings.Networks.${docker_network}.IPAddress }}" ${project}-mysql)
   sql=$(cat << EOF
